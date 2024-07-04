@@ -78,4 +78,48 @@ export class MainContract implements Contract {
             body: msg_body,
         });
     }
+
+    async sendDeposit(provider: ContractProvider, sender: Sender, value: bigint) {
+        const msg_body = beginCell()
+            .storeUint(2, 32) // OP code
+            .endCell();
+
+        await provider.internal(sender, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: msg_body,
+        });
+    }
+
+    async sendNoCodeDeposit(
+        provider: ContractProvider,
+        sender: Sender,
+        value: bigint
+    ) {
+        const msg_body = beginCell().endCell();
+
+        await provider.internal(sender, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: msg_body,
+        });
+    }
+
+    async sendWithdrawalRequest(
+        provider: ContractProvider,
+        sender: Sender,
+        value: bigint,
+        amount: bigint
+    ) {
+        const msg_body = beginCell()
+            .storeUint(3, 32) // OP code
+            .storeCoins(amount)
+            .endCell();
+
+        await provider.internal(sender, {
+            value,
+            sendMode: SendMode.PAY_GAS_SEPARATELY,
+            body: msg_body,
+        });
+    }
 }
