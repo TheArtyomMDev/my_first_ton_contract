@@ -1,13 +1,17 @@
 import {Address, beginCell, Cell, Contract, contractAddress, ContractProvider, Sender, SendMode} from "@ton/core";
 
-
 export type MainContractConfig = {
     number: number;
     address: Address;
+    owner_address: Address;
 };
 
 export function mainContractConfigToCell(config: MainContractConfig): Cell {
-    return beginCell().storeUint(config.number, 32).storeAddress(config.address).endCell();
+    return beginCell()
+        .storeUint(config.number, 32)
+        .storeAddress(config.address)
+        .storeAddress(config.owner_address)
+        .endCell();
 }
 
 export class MainContract implements Contract {
@@ -45,6 +49,14 @@ export class MainContract implements Contract {
         return {
             number: stack.readNumber(),
             recent_sender: stack.readAddress(),
+            owner_address: stack.readAddress(),
+        };
+    }
+
+    async getBalance(provider: ContractProvider) {
+        const { stack } = await provider.get("balance", []);
+        return {
+            number: stack.readNumber(),
         };
     }
 
