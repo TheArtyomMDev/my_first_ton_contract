@@ -6,9 +6,9 @@ export async function run(provider: NetworkProvider) {
     const myContract = MainContract.createFromConfig(
         {
             number: 0,
-            address: address("kQDU69xgU6Mj-iNDHYsWWuNx7yRPQC_bNZNCpq5yVc7LiE7D"),
+            address: address("0QDIHoTtFWW5Rz6zYTSDJ7juwRxWk_xjjsKRUtvxPir2Uo9x"),
             owner_address: address(
-                "kQDU69xgU6Mj-iNDHYsWWuNx7yRPQC_bNZNCpq5yVc7LiE7D"
+                "0QDIHoTtFWW5Rz6zYTSDJ7juwRxWk_xjjsKRUtvxPir2Uo9x"
             ),
         },
         await compile("MainContract")
