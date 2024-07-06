@@ -53,7 +53,24 @@ describe("main.fc contract tests", () => {
     });
 
 
-    it("test data adding from other", async () => {
+    it("test data adding from several wallets", async () => {
+        await myContract.sendDeposit(
+            ownerWallet.getSender(),
+            toNano("5"),
+            25n,
+            6n,
+            25n,
+        );
+
+        var dat: Cell = beginCell().storeAddress(ownerWallet.address).endCell();
+        var intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
+
+        var userData = await myContract.getData(intAdr);
+        console.assert(userData.coins_sent === toNano("5"));
+        console.assert(userData.usd_to_borrow === 25n);
+        console.assert(userData.min_price_liquidation === 6n);
+        console.assert(userData.max_price_liquidation === 25n);
+
         const senderWallet = await blockchain.treasury("sender");
 
         await myContract.sendDeposit(
@@ -64,10 +81,10 @@ describe("main.fc contract tests", () => {
             25n,
         );
 
-        const dat: Cell = beginCell().storeAddress(senderWallet.address).endCell();
-        const intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
+        dat = beginCell().storeAddress(senderWallet.address).endCell();
+        intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
 
-        const userData = await myContract.getData(intAdr);
+        userData = await myContract.getData(intAdr);
         console.assert(userData.coins_sent === toNano("155"));
         console.assert(userData.usd_to_borrow === 125n);
         console.assert(userData.min_price_liquidation === 8n);
