@@ -6,7 +6,7 @@ import {
     contractAddress,
     ContractProvider,
     Sender,
-    SendMode,
+    SendMode, Slice,
     TupleItem, TupleItemInt
 } from "@ton/core";
 
@@ -29,7 +29,8 @@ export class MainContract implements Contract {
     constructor(
         readonly address: Address,
         readonly init?: { code: Cell; data: Cell }
-    ) {}
+    ) {
+    }
 
     static createFromConfig(
         config: MainContractConfig,
@@ -37,7 +38,7 @@ export class MainContract implements Contract {
         workchain = 0
     ) {
         const data = mainContractConfigToCell(config);
-        const init = { code, data };
+        const init = {code, data};
         const address = contractAddress(workchain, init);
 
         return new MainContract(address, init);
@@ -56,13 +57,20 @@ export class MainContract implements Contract {
     }
 
     async getData(provider: ContractProvider, address: bigint) {
-        console.log(address);
+        // console.log(address);
 
         const addressInt: TupleItemInt = {type: "int", value: address};
         const args: TupleItemInt[] = [addressInt];
-        const { stack } = await provider.get("get_value", args);
+        const {stack} = await provider.get("get_value", args);
 
-        return stack.readCell().beginParse();
+        var cs: Slice = stack.readCell().beginParse();
+
+        return {
+            coins_sent: cs.loadUintBig(64),
+            usd_to_borrow: cs.loadUintBig(64),
+            min_price_liquidation: cs.loadUintBig(64),
+            max_price_liquidation: cs.loadUintBig(64),
+        };
     }
 
     async sendDeploy(provider: ContractProvider, via: Sender, value: bigint) {
@@ -83,7 +91,7 @@ export class MainContract implements Contract {
     // }
 
     async getBalance(provider: ContractProvider) {
-        const { stack } = await provider.get("balance", []);
+        const {stack} = await provider.get("balance", []);
         return {
             number: stack.readNumber(),
         };
@@ -107,13 +115,22 @@ export class MainContract implements Contract {
         });
     }
 
-    async sendDeposit(provider: ContractProvider, sender: Sender, value: bigint) {
+    async sendDeposit(provider: ContractProvider,
+                      sender: Sender,
+                      coins: bigint,
+                      usd_to_borrow: bigint,
+                      min_price_liquidation: bigint,
+                      max_price_liquidation: bigint
+    ) {
         const msg_body = beginCell()
             .storeUint(1, 32) // OP code
+            .storeUint(usd_to_borrow, 64)
+            .storeUint(min_price_liquidation, 64)
+            .storeUint(max_price_liquidation, 64)
             .endCell();
 
         await provider.internal(sender, {
-            value,
+            value: coins,
             sendMode: SendMode.PAY_GAS_SEPARATELY,
             body: msg_body,
         });

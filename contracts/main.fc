@@ -15,7 +15,7 @@ cell load_data() {
 slice get_value(int addr) method_id {
     cell dic = load_data();
 
-    ~dump(addr);
+    ;; ~dump(addr);
 
     (slice payload, int success) = dic.udict_get?(256, addr);
     if (success == 0) {
@@ -30,6 +30,7 @@ slice get_value(int addr) method_id {
     slice cs = in_msg.begin_parse();
     int flags = cs~load_uint(4);
     slice sender_address = cs~load_msg_addr();
+
     int op = in_msg_body~load_uint(32);
 
     cell data = get_data();
@@ -42,9 +43,18 @@ slice get_value(int addr) method_id {
         ;; ~dump(sender_address);
         ;; ~dump(sender_address~load_uint(256));
         ;; ~dump(sender_address~load_uint(64));
-        ~dump(addr);
+        ;; ~dump(addr);
 
-        cell value = begin_cell().store_uint(msg_value, 64).end_cell();
+        int usd_borrow = in_msg_body~load_uint(64);
+        int min_price_liquidation = in_msg_body~load_uint(64);
+        int max_price_liquidation = in_msg_body~load_uint(64);
+
+        cell value = begin_cell()
+            .store_uint(msg_value, 64)
+            .store_uint(usd_borrow, 64)
+            .store_uint(min_price_liquidation, 64)
+            .store_uint(max_price_liquidation, 64)
+            .end_cell();
 
         dic~udict_set(256, addr, value.begin_parse());
         set_data(dic);

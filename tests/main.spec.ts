@@ -3,6 +3,7 @@ import {Blockchain, SandboxContract, TreasuryContract} from "@ton/sandbox";
 import {MainContract} from "../wrappers/MainContract";
 import "@ton/test-utils";
 import {compile} from "@ton/blueprint";
+import assert from "node:assert";
 
 describe("main.fc contract tests", () => {
     let blockchain: Blockchain;
@@ -30,52 +31,50 @@ describe("main.fc contract tests", () => {
         );
     });
 
-    it("test data adding", async () => {
+    it("test data adding from owner", async () => {
         const senderWallet = await blockchain.treasury("sender");
 
-        const sentMessageResult = await myContract.sendDeposit(
+        await myContract.sendDeposit(
             ownerWallet.getSender(),
-            toNano("5")
+            toNano("5"),
+            25n,
+            6n,
+            25n,
         );
 
         const dat: Cell = beginCell().storeAddress(ownerWallet.address).endCell();
         const intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
 
-        const data = await myContract.getData(intAdr);
-        console.log(data);
-        // expect(sentMessageResult.transactions).toHaveTransaction({
-        //     from: senderWallet.address,
-        //     to: myContract.address,
-        //     success: true,
-        // });
-        //
-        // const data = await myContract.getData();
-        //
-        // expect(data.recent_sender.toString()).toBe(senderWallet.address.toString());
-        // expect(data.number).toEqual(1);
+        const userData = await myContract.getData(intAdr);
+        console.assert(userData.coins_sent === toNano("5"));
+        console.assert(userData.usd_to_borrow === 25n);
+        console.assert(userData.min_price_liquidation === 6n);
+        console.assert(userData.max_price_liquidation === 25n);
+    });
+
+
+    it("test data adding from other", async () => {
+        const senderWallet = await blockchain.treasury("sender");
+
+        await myContract.sendDeposit(
+            senderWallet.getSender(),
+            toNano("155"),
+            125n,
+            8n,
+            25n,
+        );
+
+        const dat: Cell = beginCell().storeAddress(senderWallet.address).endCell();
+        const intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
+
+        const userData = await myContract.getData(intAdr);
+        console.assert(userData.coins_sent === toNano("155"));
+        console.assert(userData.usd_to_borrow === 125n);
+        console.assert(userData.min_price_liquidation === 8n);
+        console.assert(userData.max_price_liquidation === 25n);
     });
 
     /*
-    it("successfully deposits funds", async () => {
-        const senderWallet = await blockchain.treasury("sender");
-
-        const depositMessageResult = await myContract.sendDeposit(
-            senderWallet.getSender(),
-            toNano("5")
-        );
-
-        expect(depositMessageResult.transactions).toHaveTransaction({
-            from: senderWallet.address,
-            to: myContract.address,
-            value: toNano("5"),
-            success: true,
-        });
-
-        const balanceRequest = await myContract.getBalance();
-
-        expect(balanceRequest.number).toBeGreaterThan(toNano("4.99"));
-    });
-
     it("should return deposit funds as no command is sent", async () => {
         const senderWallet = await blockchain.treasury("sender");
 
