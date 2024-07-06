@@ -5,7 +5,7 @@ import { compile, NetworkProvider } from "@ton/blueprint";
 export async function run(provider: NetworkProvider) {
     const myContract = MainContract.createFromConfig(
         {
-            number: 0,
+            ownerAddress: 0,
             address: address("0QDIHoTtFWW5Rz6zYTSDJ7juwRxWk_xjjsKRUtvxPir2Uo9x"),
             owner_address: address(
                 "0QDIHoTtFWW5Rz6zYTSDJ7juwRxWk_xjjsKRUtvxPir2Uo9x"

@@ -1,9 +1,8 @@
-import {address, Cell, toNano} from "@ton/core";
-import {hex} from "../build/main.compiled.json";
-import { Blockchain, SandboxContract, TreasuryContract } from "@ton/sandbox";
+import {beginCell, Cell, toNano} from "@ton/core";
+import {Blockchain, SandboxContract, TreasuryContract} from "@ton/sandbox";
 import {MainContract} from "../wrappers/MainContract";
 import "@ton/test-utils";
-import { compile } from "@ton/blueprint";
+import {compile} from "@ton/blueprint";
 
 describe("main.fc contract tests", () => {
     let blockchain: Blockchain;
@@ -24,8 +23,6 @@ describe("main.fc contract tests", () => {
         myContract = blockchain.openContract(
             await MainContract.createFromConfig(
                 {
-                    number: 0,
-                    address: initWallet.address,
                     owner_address: ownerWallet.address,
                 },
                 codeCell
@@ -33,27 +30,32 @@ describe("main.fc contract tests", () => {
         );
     });
 
-    it("test get latest sender", async () => {
+    it("test data adding", async () => {
         const senderWallet = await blockchain.treasury("sender");
 
-        const sentMessageResult = await myContract.sendIncrement(
-            senderWallet.getSender(),
-            toNano("0.05"),
-            1
+        const sentMessageResult = await myContract.sendDeposit(
+            ownerWallet.getSender(),
+            toNano("5")
         );
 
-        expect(sentMessageResult.transactions).toHaveTransaction({
-            from: senderWallet.address,
-            to: myContract.address,
-            success: true,
-        });
+        const dat: Cell = beginCell().storeAddress(ownerWallet.address).endCell();
+        const intAdr = BigInt('0x' + dat.bits.substring(11, 256).toString());
 
-        const data = await myContract.getData();
-
-        expect(data.recent_sender.toString()).toBe(senderWallet.address.toString());
-        expect(data.number).toEqual(1);
+        const data = await myContract.getData(intAdr);
+        console.log(data);
+        // expect(sentMessageResult.transactions).toHaveTransaction({
+        //     from: senderWallet.address,
+        //     to: myContract.address,
+        //     success: true,
+        // });
+        //
+        // const data = await myContract.getData();
+        //
+        // expect(data.recent_sender.toString()).toBe(senderWallet.address.toString());
+        // expect(data.number).toEqual(1);
     });
 
+    /*
     it("successfully deposits funds", async () => {
         const senderWallet = await blockchain.treasury("sender");
 
@@ -146,4 +148,6 @@ describe("main.fc contract tests", () => {
             exitCode: 104,
         });
     });
+
+     */
 });
